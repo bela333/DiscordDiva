@@ -41,8 +41,5 @@
     <ClCompile Include="discord.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="LICENSE">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>
