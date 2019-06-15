@@ -11,3 +11,12 @@
 #include "difficulty.h"
 
 void InjectDivaHooks(HMODULE hModule);
+struct SongData {
+	int songID;
+	char unknown[4];
+	char songName[24];
+	char isLong;
+};
+char* GetSongName();
+char* GetSongName(SongData* song);
+SongData* GetSongData();

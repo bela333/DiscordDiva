@@ -108,23 +108,30 @@ Difficulty GetDifficulty() {
 	return (Difficulty)(*DIFFICULTY);
 }
 
-char* GetSongName() {
-	size_t* ptr = (size_t*)0x140d0a920;
-	ptr = (size_t*)(((char*)*ptr) + 0x20);
-	unsigned int isLong = (*((int*)(ptr))) > 0xf;
-	ptr = (size_t*)0x140d0a920;
-	ptr = (size_t*)(((char*)*ptr) + 0x8);
-	if (isLong)
-	{
-		return (char*)(*ptr);
-	}
-	return (char*)ptr;
+SongData* GetSongData() {
+	return *(SongData**)0x140d0a920;
 }
+
+char* GetSongName(SongData* song) {
+	if (song->isLong > 0x0f)
+	{
+		return *(char**)song->songName;
+	}
+	return song->songName;
+}
+char* GetSongName() {
+	auto song = GetSongData();
+	return GetSongName(song);
+}
+
 
 void OnGameStateChange() {
 	time_t ltime;
 	time(&ltime);
-	ChangeActivity(*IS_PLAYING_GAME, GetSongName(), *IS_PV, GetDifficulty(), (long long)ltime);
+	auto song = GetSongData();
+	//Filter out the Dummy stage
+	char isPlayingGame = song->songID == 999 ? 0 : *IS_PLAYING_GAME;
+	ChangeActivity(isPlayingGame, GetSongName(song), *IS_PV, GetDifficulty(), (long long)ltime);
 }
 
 void InjectDivaHooks(HMODULE hModule) {
