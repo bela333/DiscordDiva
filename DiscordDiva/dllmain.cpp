@@ -47,7 +47,7 @@ void InstallHook(void* source, void* destination, int length)
 		return;
 
 	//Jump to a certain address
-	BYTE stub[] =
+	BYTE jump_stub[] =
 	{
 		0xFF, 0x25, 0x00, 0x00, 0x00, 0x00, // jmp qword ?ptr [$+6]
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 // ptr???
@@ -58,45 +58,40 @@ void InstallHook(void* source, void* destination, int length)
 	BYTE call_stub[] = {
 		0xe8, // call offset ?ptr [$+1]
 		0x00, 0x00, 0x00, 0x00,  // ptr???
-		0xFF, 0x25, 0x00, 0x00, 0x00, 0x00, // jmp qword ?ptr [$+11]
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 // ptr???
 	};
 
-	void* trampoline = VirtualAlloc(0, length + sizeof(stub), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
-	void* callInstruction = VirtualAlloc(0, sizeof(call_stub), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
-	void* functionHack = VirtualAlloc(0, sizeof(stub), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+	BYTE* callInstruction = (BYTE*)VirtualAlloc(0, sizeof(call_stub) + length + sizeof(jump_stub), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+	BYTE* functionHack = (BYTE*)VirtualAlloc(0, sizeof(jump_stub), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
 
 	DWORD oldProtect;
-	//Remove protection from memory range of PDFT
+	//Remove protection from memory range of PDAFT
 	VirtualProtect(source, length, PAGE_EXECUTE_READWRITE, &oldProtect);
 
 	//Calculate offset for call stub
 	int offset = (int)((long long)functionHack - (long long)(callInstruction) - 5);
 	//Populate call stub with offset
 	memcpy(&call_stub[1], &offset, 4);
-	//Populate call stub with trampoline address
-	memcpy(&call_stub[11], &trampoline, 8);
-	//Copy call stub to persistent memory
-	memcpy(callInstruction, call_stub, sizeof(call_stub));
+
+	//Populate jump_stub with the address of the next instruction
+	DWORD64 returnAddress = (DWORD64)source + length;
+	memcpy(jump_stub + 6, &returnAddress, 8);
+
+	//Copy call stub to allocated memory
+	memcpy(&callInstruction[0], call_stub, sizeof(call_stub));
+	//Copy old code to allocated memory
+	memcpy(&callInstruction[sizeof(call_stub)], source, length);
+	//Copy jump stub to allocated memory
+	memcpy(&callInstruction[sizeof(call_stub) + length], jump_stub, sizeof(jump_stub));
 	
 	//Populate the jmp stub with the destination address
-	memcpy(stub + 6, &destination, 8);
+	memcpy(jump_stub + 6, &destination, 8);
 	//Copy jmp stub to hack
-	memcpy(functionHack, stub, sizeof(stub));
-
-	//Calculate address of next instruction in line
-	DWORD64 returnAddress = (DWORD64)source + length;
-	//Populate the jmp stub with it
-	memcpy(stub + 6, &returnAddress, 8);
-	//Copy original code to trampoline
-	memcpy((void*)((DWORD_PTR)trampoline), source, length);
-	//Populate trampoline with return address jump
-	memcpy((void*)((DWORD_PTR)trampoline + length), stub, sizeof(stub));
+	memcpy(functionHack, jump_stub, sizeof(jump_stub));
 
 	// Populate the jmp stub with the address of the call stub
-	memcpy(stub + 6, &callInstruction, 8);
+	memcpy(jump_stub + 6, &callInstruction, 8);
 	//Overwrite original code
-	memcpy(source, stub, sizeof(stub));
+	memcpy(source, jump_stub, sizeof(jump_stub));
 
 	//Fill unused memory with NOP
 	for (int i = minLen; i < length; i++)
