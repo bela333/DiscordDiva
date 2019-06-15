@@ -1,13 +1,6 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
 #include "stdafx.h"
-#include <winsock2.h>
-#include <exception>
-#include <iostream>
-#include <ws2tcpip.h>
-#include <stdio.h>
-#include "discord.h"
-#include "difficulty.h"
-#include <time.h>
+#include "dllmain.h"
 
 
 
@@ -37,7 +30,6 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 }
 
 //Modified code from Samyuu's TotallyLegitArcadeController
-//TODO: Merge jmp stud and call stud
 void InstallHook(void* source, void* destination, int length)
 {
 	const DWORD minLen = 0xE;

@@ -27,6 +27,9 @@
     <ClInclude Include="difficulty.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dllmain.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -39,6 +42,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="discord.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="difficulty.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -58,28 +58,6 @@ void UpdateActivityCallback(void* data, enum EDiscordResult result)
 	
 }
 
-char* DifficultyToString(Difficulty difficulty) {
-	switch (difficulty)
-	{
-	case Easy:
-		return "Easy";
-		break;
-	case Normal:
-		return "Normal";
-		break;
-	case Hard:
-		return "Hard";
-		break;
-	case Extreme:
-		return "Extreme";
-		break;
-	case Extra:
-		return "EX-Extreme";
-		break;
-	}
-	return "Unknown";
-}
-
 void ChangeActivity(int isPlaying, char* songName, int isPV, Difficulty difficulty, long long timeSinceStart) {
 	std::cout << DISCORD_PREFIX_ << "Updating activity" << std::endl;
 	if (activities == nullptr || core == nullptr)
