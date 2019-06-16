@@ -9,6 +9,7 @@
 #include "difficulty.h"
 #include <time.h>
 #include "difficulty.h"
+#include "config.h"
 
 void InjectDivaHooks(HMODULE hModule);
 struct SongData {
@@ -17,6 +18,6 @@ struct SongData {
 	char songName[24];
 	char isLong;
 };
-char* GetSongName();
-char* GetSongName(SongData* song);
+void GetSongName(char* buffer, rsize_t bufferSize);
+void GetSongName(SongData* song, char* buffer, rsize_t bufferSize);
 SongData* GetSongData();

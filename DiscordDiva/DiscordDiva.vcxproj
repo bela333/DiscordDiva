@@ -148,6 +148,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="config.h" />
     <ClInclude Include="difficulty.h" />
     <ClInclude Include="discord.h" />
     <ClInclude Include="dllmain.h" />
@@ -155,6 +156,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="config.cpp" />
     <ClCompile Include="difficulty.cpp" />
     <ClCompile Include="discord.cpp" />
     <ClCompile Include="DiscordDiva.cpp" />

@@ -112,16 +112,21 @@ SongData* GetSongData() {
 	return *(SongData**)0x140d0a920;
 }
 
-char* GetSongName(SongData* song) {
+void GetSongName(SongData* song, char* buffer, rsize_t bufferSize) {
+	char* defaultSongName;
 	if (song->isLong > 0x0f)
 	{
-		return *(char**)song->songName;
+		defaultSongName = *(char**)song->songName;
 	}
-	return song->songName;
+	else
+	{
+		defaultSongName = song->songName;
+	}
+	GetOverrideName(song->songID, defaultSongName, buffer, bufferSize);
 }
-char* GetSongName() {
+void GetSongName(char* buffer, rsize_t bufferSize) {
 	auto song = GetSongData();
-	return GetSongName(song);
+	return GetSongName(song, buffer, bufferSize);
 }
 
 char lastState = 0x01;
@@ -132,10 +137,16 @@ void OnGameStateChange() {
 	char isPlayingGame = song->songID == 999 ? 0 : *IS_PLAYING_GAME;
 	if (isPlayingGame != lastState)
 	{
+		char songName[100];
 		lastState = isPlayingGame;
 		time_t ltime;
 		time(&ltime);
-		ChangeActivity(isPlayingGame, GetSongName(song), *IS_PV, GetDifficulty(), (long long)ltime);
+		//Getting the song name has turned out to be quite a challenge. If it isn't required, don't do it.
+		if (isPlayingGame)
+		{
+			GetSongName(song, songName, sizeof(songName));
+		}
+		ChangeActivity(isPlayingGame, songName, *IS_PV, GetDifficulty(), (long long)ltime);
 	}
 }
 
