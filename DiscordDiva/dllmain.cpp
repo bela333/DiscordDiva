@@ -124,14 +124,19 @@ char* GetSongName() {
 	return GetSongName(song);
 }
 
+char lastState = 0x01;
 
 void OnGameStateChange() {
-	time_t ltime;
-	time(&ltime);
 	auto song = GetSongData();
 	//Filter out the Dummy stage
 	char isPlayingGame = song->songID == 999 ? 0 : *IS_PLAYING_GAME;
-	ChangeActivity(isPlayingGame, GetSongName(song), *IS_PV, GetDifficulty(), (long long)ltime);
+	if (isPlayingGame != lastState)
+	{
+		lastState = isPlayingGame;
+		time_t ltime;
+		time(&ltime);
+		ChangeActivity(isPlayingGame, GetSongName(song), *IS_PV, GetDifficulty(), (long long)ltime);
+	}
 }
 
 void InjectDivaHooks(HMODULE hModule) {
