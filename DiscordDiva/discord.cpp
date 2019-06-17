@@ -26,13 +26,13 @@ void SetupDiscord() {
 	std::cout << DISCORD_PREFIX_ << "Creating params list" << std::endl;
 	DiscordCreateParamsSetDefault(&params);
 	params.client_id = 587576492301746199;
-	params.flags = DiscordCreateFlags_Default;
+	params.flags = DiscordCreateFlags_NoRequireDiscord;
 	std::cout << DISCORD_PREFIX_ << "Creating client" << std::endl;
 	result = DiscordCreate(DISCORD_VERSION, &params, &core);
 	if (result != DiscordResult_Ok)
 	{
-		std::cout << DISCORD_PREFIX_ << "Failed to create Discord thing. Reason: " << result << std::endl;
-		core = NULL;
+		std::cout << DISCORD_PREFIX_ << "Failed to create Discord client. Reason: " << result << std::endl;
+		core = nullptr;
 		return;
 	}
 	activities = core->get_activity_manager(core);
