@@ -6,6 +6,7 @@
 #include <iostream>
 #include <process.h>
 #include "difficulty.h"
+#include <mutex>
 
 void SetupDiscord();
 void ChangeActivity(int isPlaying, char* songName, int isPV, Difficulty difficulty, long long timeSinceStart);

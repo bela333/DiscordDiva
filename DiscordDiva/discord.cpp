@@ -4,17 +4,21 @@
 
 struct IDiscordCore* core = nullptr;
 struct IDiscordActivityManager* activities = nullptr;
+std::mutex coreMutex;
 
 void DiscordThread(void*) {
 	for (;;)
 	{
+		coreMutex.lock();
 		if (core != nullptr)
 		{
 			core->run_callbacks(core);
+			coreMutex.unlock();
 		}
 		else
 		{
-			std::cout << DISCORD_PREFIX_ << "Core is unavailable" << std::endl;
+			coreMutex.unlock();
+			break;
 		}
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
@@ -39,10 +43,11 @@ void SetupDiscord() {
 	_beginthread(DiscordThread, 20, NULL);
 }
 
-//TODO: Remove everything that isn't needed anymore
-//Mainly: The loop thread and the Discord Core
 void StopDiscord() {
-	
+	coreMutex.lock();
+	core->destroy(core);
+	core = nullptr;
+	coreMutex.unlock();
 }
 
 void UpdateActivityCallback(void* data, enum EDiscordResult result)
@@ -60,10 +65,7 @@ void UpdateActivityCallback(void* data, enum EDiscordResult result)
 
 void ChangeActivity(int isPlaying, char* songName, int isPV, Difficulty difficulty, long long timeSinceStart) {
 	std::cout << DISCORD_PREFIX_ << "Updating activity" << std::endl;
-	if (activities == nullptr || core == nullptr)
-	{
-		return;
-	}
+
 
 	struct DiscordActivity activity;
 	memset(&activity, 0, sizeof(activity));
@@ -82,6 +84,11 @@ void ChangeActivity(int isPlaying, char* songName, int isPV, Difficulty difficul
 	{
 		strcpy_s(activity.state, "Waiting");
 	}
+	coreMutex.lock();
+	if (activities == nullptr || core == nullptr)
+	{
+		return;
+	}
 	activities->update_activity(activities, &activity, NULL, UpdateActivityCallback);
-	//DiscordThread();
+	coreMutex.unlock();
 }
