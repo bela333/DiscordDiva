@@ -108,21 +108,25 @@ Difficulty GetDifficulty() {
 	return (Difficulty)(*DIFFICULTY);
 }
 
-SongData* GetSongData() {
-	return *(SongData**)0x140d0a920;
+SongData GetSongData() {
+	SongData sd;
+	sd.isLong = *(char*)0x140D0A590;
+	memcpy(sd.songName, (void*)0x140D0A578, sizeof(sd.songName));
+	sd.songID = *(int*)0x140CDD8E0;
+	return sd;
 }
 
-void GetSongName(SongData* song, char* buffer, rsize_t bufferSize) {
+void GetSongName(SongData song, char* buffer, rsize_t bufferSize) {
 	char* defaultSongName;
-	if (song->isLong > 0x0f)
+	if (song.isLong > 0x0f)
 	{
-		defaultSongName = *(char**)song->songName;
+		defaultSongName = *(char**)song.songName;
 	}
 	else
 	{
-		defaultSongName = song->songName;
+		defaultSongName = song.songName;
 	}
-	GetOverrideName(song->songID, defaultSongName, buffer, bufferSize);
+	GetOverrideName(song.songID, defaultSongName, buffer, bufferSize);
 }
 void GetSongName(char* buffer, rsize_t bufferSize) {
 	auto song = GetSongData();
@@ -134,7 +138,7 @@ char lastState = 0x01;
 void OnGameStateChange() {
 	auto song = GetSongData();
 	//Filter out the Dummy stage
-	char isPlayingGame = song->songID == 999 ? 0 : *IS_PLAYING_GAME;
+	char isPlayingGame = song.songID == 999 ? 0 : *IS_PLAYING_GAME;
 	if (isPlayingGame != lastState)
 	{
 		char songName[100];

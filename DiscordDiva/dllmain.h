@@ -19,5 +19,5 @@ struct SongData {
 	char isLong;
 };
 void GetSongName(char* buffer, rsize_t bufferSize);
-void GetSongName(SongData* song, char* buffer, rsize_t bufferSize);
-SongData* GetSongData();
+void GetSongName(SongData song, char* buffer, rsize_t bufferSize);
+SongData GetSongData();
