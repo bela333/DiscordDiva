@@ -1,100 +1,8 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
 #include "stdafx.h"
 #include "dllmain.h"
-
-
-
-
-BOOL APIENTRY DllMain( HMODULE hModule,
-                       DWORD  ul_reason_for_call,
-                       LPVOID lpReserved
-                     )
-{
-    switch (ul_reason_for_call)
-    {
-    case DLL_PROCESS_ATTACH:
-		std::cout << DISCORD_PREFIX_ << "Loading DivaDiscord..." << std::endl;
-		std::cout << DISCORD_PREFIX_ << "Injecting hooks" << std::endl;
-		InjectDivaHooks(hModule);
-		std::cout << DISCORD_PREFIX_ << "Connecting to Discord" << std::endl;
-		SetupDiscord();
-		break;
-    case DLL_THREAD_ATTACH:
-    case DLL_THREAD_DETACH:
-		break;
-    case DLL_PROCESS_DETACH:
-		StopDiscord();
-        break;
-    }
-    return TRUE;
-}
-
-//Modified code from Samyuu's TotallyLegitArcadeController
-void InstallHook(void* source, void* destination, int length)
-{
-	const DWORD minLen = 0xE;
-
-	if (length < minLen)
-		//return NULL;
-		return;
-
-	//Jump to a certain address
-	BYTE jump_stub[] =
-	{
-		0xFF, 0x25, 0x00, 0x00, 0x00, 0x00, // jmp qword ?ptr [$+6]
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 // ptr???
-	};
-
-	//Thank God for Compiler Explorer
-	//Call function and jump to a certain address
-	BYTE call_stub[] = {
-		0xe8, // call offset ?ptr [$+1]
-		0x00, 0x00, 0x00, 0x00,  // ptr???
-	};
-
-	BYTE* callInstruction = (BYTE*)VirtualAlloc(0, sizeof(call_stub) + length + sizeof(jump_stub), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
-	BYTE* functionHack = (BYTE*)VirtualAlloc(0, sizeof(jump_stub), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
-
-	DWORD oldProtect;
-	//Remove protection from memory range of PDAFT
-	VirtualProtect(source, length, PAGE_EXECUTE_READWRITE, &oldProtect);
-
-	//Calculate offset for call stub
-	int offset = (int)((long long)functionHack - (long long)(callInstruction) - 5);
-	//Populate call stub with offset
-	memcpy(&call_stub[1], &offset, 4);
-
-	//Populate jump_stub with the address of the next instruction
-	DWORD64 returnAddress = (DWORD64)source + length;
-	memcpy(jump_stub + 6, &returnAddress, 8);
-
-	//Copy call stub to allocated memory
-	memcpy(&callInstruction[0], call_stub, sizeof(call_stub));
-	//Copy old code to allocated memory
-	memcpy(&callInstruction[sizeof(call_stub)], source, length);
-	//Copy jump stub to allocated memory
-	memcpy(&callInstruction[sizeof(call_stub) + length], jump_stub, sizeof(jump_stub));
-	
-	//Populate the jmp stub with the destination address
-	memcpy(jump_stub + 6, &destination, 8);
-	//Copy jmp stub to hack
-	memcpy(functionHack, jump_stub, sizeof(jump_stub));
-
-	// Populate the jmp stub with the address of the call stub
-	memcpy(jump_stub + 6, &callInstruction, 8);
-	//Overwrite original code
-	memcpy(source, jump_stub, sizeof(jump_stub));
-
-	//Fill unused memory with NOP
-	for (int i = minLen; i < length; i++)
-		*(BYTE*)((DWORD_PTR)source + i) = NOP_OPCODE;
-
-	//Protect
-	VirtualProtect(source, length, oldProtect, &oldProtect);
-}
-
-
-
+#include <detours.h>
+#pragma comment(lib, "detours.lib")
 
 char* IS_PLAYING_GAME = (char*)0x140d1e480;
 char* IS_PV = (char*)0x14cc53b6d;
@@ -154,8 +62,54 @@ void OnGameStateChange() {
 	}
 }
 
-void InjectDivaHooks(HMODULE hModule) {
-	InstallHook((void*)0x1400dfaf8, (void*)OnGameStateChange, 17);
-	InstallHook((void*)0x1400DFEC8, (void*)OnGameStateChange, 14);
-	//InstallHook((void*)0x000000014018CC40, (void*)DiscordThread, 0xe);
+signed __int64 hookedDivaSongStart(__int64 a1, __int64 a2)
+{
+	divaSongStart(a1, a2);
+	OnGameStateChange();
+	return 0;
+}
+
+signed __int64 hookedDivaSongEnd(__int64 a1)
+{
+	divaSongEnd(a1);
+	OnGameStateChange();
+	return 0;
+}
+
+BOOL APIENTRY DllMain(HMODULE hModule,
+	DWORD  ul_reason_for_call,
+	LPVOID lpReserved
+)
+{
+	switch (ul_reason_for_call)
+	{
+	case DLL_PROCESS_ATTACH:
+		std::cout << DISCORD_PREFIX_ << "Loading DivaDiscord..." << std::endl;
+		std::cout << DISCORD_PREFIX_ << "Injecting hooks" << std::endl;
+
+		//InstallHook((void*)0x1400dfaf8, (void*)OnGameStateChange, 17);
+		DisableThreadLibraryCalls(hModule);
+		DetourTransactionBegin();
+		DetourUpdateThread(GetCurrentThread());
+		DetourAttach(&(PVOID&)divaSongStart, (PVOID)hookedDivaSongStart);
+		DetourTransactionCommit();
+
+		//InstallHook((void*)0x1400DFEC8, (void*)OnGameStateChange, 14);
+		DisableThreadLibraryCalls(hModule);
+		DetourTransactionBegin();
+		DetourUpdateThread(GetCurrentThread());
+		DetourAttach(&(PVOID&)divaSongEnd, (PVOID)hookedDivaSongEnd);
+		DetourTransactionCommit();
+
+		std::cout << DISCORD_PREFIX_ << "Connecting to Discord" << std::endl;
+		SetupDiscord();
+		break;
+	case DLL_THREAD_ATTACH:
+	case DLL_THREAD_DETACH:
+		break;
+	case DLL_PROCESS_DETACH:
+		StopDiscord();
+		break;
+	}
+	return TRUE;
 }

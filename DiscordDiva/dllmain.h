@@ -11,7 +11,6 @@
 #include "difficulty.h"
 #include "config.h"
 
-void InjectDivaHooks(HMODULE hModule);
 struct SongData {
 	int songID;
 	char unknown[4];
@@ -21,3 +20,6 @@ struct SongData {
 void GetSongName(char* buffer, rsize_t bufferSize);
 void GetSongName(SongData song, char* buffer, rsize_t bufferSize);
 SongData GetSongData();
+
+signed __int64(__fastcall* divaSongStart)(__int64 a1, __int64 a2) = (__int64(__fastcall*)(__int64 a1, __int64 a2))0x1400DF820;
+signed __int64(__fastcall* divaSongEnd)(__int64 a1) = (__int64(__fastcall*)(__int64 a1))0x1400DFE80;
