@@ -84,7 +84,7 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 	switch (ul_reason_for_call)
 	{
 	case DLL_PROCESS_ATTACH:
-		std::cout << DISCORD_PREFIX_ << "Loading DivaDiscord..." << std::endl;
+		std::cout << DISCORD_PREFIX_ << "Loading DiscordDiva..." << std::endl;
 		std::cout << DISCORD_PREFIX_ << "Injecting hooks" << std::endl;
 
 		//InstallHook((void*)0x1400dfaf8, (void*)OnGameStateChange, 17);
