@@ -9,7 +9,7 @@ std::wstring DirPath() {
 	return std::wstring(buffer).substr(0, pos);
 }
 
-std::wstring CONFIG_FILE_STRING = DirPath() + L"\\plugins\\discorddiva.ini";
+std::wstring CONFIG_FILE_STRING = DirPath() + L"\\plugins\\obsdiva.ini";
 const wchar_t* CONFIG_FILE = CONFIG_FILE_STRING.c_str();
 
 void GetOverrideName(int songID, char* defaultName, char* buffer, rsize_t bufferSize) {
@@ -30,5 +30,18 @@ void GetOverrideName(int songID, char* defaultName, char* buffer, rsize_t buffer
 	wcstombs_s((size_t)NULL, buffer, bufferSize, wBuffer, _TRUNCATE);
 
 	delete wDefaultName;
+	delete wBuffer;
+}
+
+void GetSongNamePath(char* buffer, rsize_t bufferSize) {
+	wchar_t* wBuffer = new wchar_t[bufferSize];
+	GetPrivateProfileStringW(L"config", L"song_name_path", L"songName.txt", wBuffer, bufferSize, CONFIG_FILE);
+	wcstombs_s((size_t)NULL, buffer, bufferSize, wBuffer, _TRUNCATE);
+	delete wBuffer;
+}
+void GetDifficultyPath(char* buffer, rsize_t bufferSize) {
+	wchar_t* wBuffer = new wchar_t[bufferSize];
+	GetPrivateProfileStringW(L"config", L"difficulty", L"difficulty.txt", wBuffer, bufferSize, CONFIG_FILE);
+	wcstombs_s((size_t)NULL, buffer, bufferSize, wBuffer, _TRUNCATE);
 	delete wBuffer;
 }
