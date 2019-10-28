@@ -87,6 +87,7 @@ void ChangeActivity(int isPlaying, char* songName, int isPV, Difficulty difficul
 	coreMutex.lock();
 	if (activities == nullptr || core == nullptr)
 	{
+		coreMutex.unlock();
 		return;
 	}
 	activities->update_activity(activities, &activity, NULL, UpdateActivityCallback);

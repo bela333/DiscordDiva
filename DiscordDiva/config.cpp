@@ -16,19 +16,22 @@ void GetOverrideName(int songID, char* defaultName, char* buffer, rsize_t buffer
 	wchar_t configID[7]; //pv_000\0
 	swprintf_s(configID, L"pv_%03d", songID);
 
-	//Converting arguments to wchar_t*
-	//defaultName
-	size_t defaultName_len = strlen(defaultName)+1;
-	wchar_t* wDefaultName = new wchar_t[defaultName_len];
-	mbstowcs_s((size_t*)NULL, wDefaultName, defaultName_len, defaultName, _TRUNCATE);
+	int lenDefaultName = MultiByteToWideChar(CP_UTF8, 0, defaultName, -1, 0, 0);
+	wchar_t* wDefaultName = new wchar_t[lenDefaultName];
+	MultiByteToWideChar(CP_UTF8, 0, defaultName, -1, wDefaultName, lenDefaultName);
 
-	wchar_t* wBuffer = new wchar_t[bufferSize];
+	//Populate wBuffer with either the default name or the override
+	wchar_t* wBuffer = new wchar_t[bufferSize*2];
+	GetPrivateProfileStringW(L"override", configID, wDefaultName, wBuffer, bufferSize*2, CONFIG_FILE);
 
-	GetPrivateProfileStringW(L"override", configID, wDefaultName, wBuffer, bufferSize, CONFIG_FILE);
+	int lenName = WideCharToMultiByte(CP_UTF8, 0, wBuffer, -1, 0, 0, 0, 0);
+	char* name = new char[lenName];
+	WideCharToMultiByte(CP_UTF8, 0, wBuffer, -1, buffer, bufferSize, 0, 0);
 
-	//Convert buffer from wchar_t*
-	wcstombs_s((size_t)NULL, buffer, bufferSize, wBuffer, _TRUNCATE);
 
-	delete wDefaultName;
-	delete wBuffer;
+	//Freeing resources
+	delete[] wBuffer;
+	delete[] wDefaultName;
+	delete[] name;
+	
 }
