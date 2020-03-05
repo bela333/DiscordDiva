@@ -77,7 +77,7 @@ void ChangeActivity(int isPlaying, char* songName, int isPV, Difficulty difficul
 		if (isPV)
 			strcpy_s(activity.state, "Watching a PV");
 		else
-			sprintf_s(activity.state, "Playing at %s difficulty.", DifficultyToString(difficulty));
+			sprintf_s(activity.state, "Playing on %s difficulty", DifficultyToString(difficulty));
 		activity.timestamps.start = timeSinceStart;
 	}
 	else

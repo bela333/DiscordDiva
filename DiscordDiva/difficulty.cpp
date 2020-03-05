@@ -17,7 +17,7 @@ char* DifficultyToString(Difficulty difficulty) {
 		return "Extreme";
 		break;
 	case Extra:
-		return "EX-Extreme";
+		return "Extra Extreme";
 		break;
 	}
 	return "Unknown";
